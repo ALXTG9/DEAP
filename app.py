@@ -387,15 +387,44 @@ def build_draft_card_html(did: str, content_json: str, status: str, root_path: s
 
 @app.get("/", response_class=HTMLResponse)
 def home() -> HTMLResponse:
-    html = html_page_start("DEAPInsights.ai")
-    html += (
-        "<h2>Server running</h2>"
-        "<p>POST JSON to <code>/webhook</code>, then open <a href='/drafts'>/drafts</a>.</p>"
-        "<p>Use PyCharm's HTTP client or any REST client to test.</p>"
-    )
-    html += html_page_end()
+    html = """
+    <html>
+    <head>
+        <title>DEAPInsights.ai</title>
+        <style>
+            .bento-button {
+                display: inline-block;
+                padding: 20px 32px;
+                background-color: rgb(29, 93, 169);
+                color: white;
+                font-size: 20px;
+                font-weight: 600;
+                text-decoration: none;
+                border-radius: 12px;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+                transition: transform 0.15s ease, box-shadow 0.15s ease;
+            }
+            .bento-button:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+            }
+            body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                background: #f5f7fa;
+                font-family: Arial, sans-serif;
+            }
+        </style>
+    </head>
+    <body>
+        <a class="bento-button" href="/drafts">Emails</a>
+    </body>
+    </html>
+    """
     return HTMLResponse(html)
-
 
 @app.get("/webhook", response_class=HTMLResponse)
 def webhook_info() -> HTMLResponse:
