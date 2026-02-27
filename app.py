@@ -414,26 +414,30 @@ def home() -> HTMLResponse:
             margin-top: 10px;
         }
 
-        /* BIGGER bento tile */
+        /* LIGHT GREY button with blue border + blue text */
         .bento-button {
             display: flex;
             width: 250px;
             height: 250px;
             justify-content: center;
             align-items: center;
-            background-color: rgb(29, 93, 169);
-            color: white;
-            font-size: 24px;   /* bigger text */
+
+            background-color: #f0f0f0;                /* light grey */
+            border: 4px solid rgb(29, 93, 169);      /* blue outline */
+            color: rgb(29, 93, 169);                 /* blue text */
+
+            font-size: 24px;
             font-weight: 700;
             border-radius: 20px;
             text-decoration: none;
-            box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+
+            box-shadow: 0 8px 18px rgba(0,0,0,0.15);
             transition: 0.2s ease;
         }
 
         .bento-button:hover {
             transform: translateY(-4px);
-            box-shadow: 0 12px 26px rgba(0,0,0,0.3);
+            box-shadow: 0 12px 26px rgba(0,0,0,0.25);
         }
     </style>
 
