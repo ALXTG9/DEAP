@@ -273,7 +273,7 @@ tailwind.config = {{
 <header class="text-white py-4 px-8 shadow flex items-center space-x-4"
         style="background-color: rgb(29, 93, 169);">
   <img src="/static/logo.png"
-       class="h-20 w-40 rounded-lg border-2 border-white shadow"
+       class="h-25 w-100 rounded-lg border-2 border-white shadow"
        alt="Company Logo">
   <h1 class="text-xl font-semibold">DEAP Secretary</h1>
 </header>
