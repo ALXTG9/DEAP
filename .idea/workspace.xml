@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="16bb03ac-17fb-4a6e-b482-0d0eb364f4af" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
@@ -27,7 +30,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "ai.playground.ignore.import.keys.banner.in.settings": "true",
-    "git-widget-placeholder": "master",
+    "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
     "last_opened_file_path": "C:/Users/david/DEAP",
     "node.js.detected.package.eslint": "true",
@@ -53,7 +56,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1772191457059</updated>
-      <workItem from="1772191458521" duration="344000" />
+      <workItem from="1772191458521" duration="868000" />
     </task>
     <servers />
   </component>
