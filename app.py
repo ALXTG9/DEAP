@@ -275,7 +275,7 @@ tailwind.config = {{
   <img src="/static/logo.png"
        class="h-20 w-auto rounded-lg border-2 border-white shadow"
        alt="Company Logo">
-  <h1 class="text-xl font-semibold">DEAP Secretary</h1>
+  <h1 class="text-3xl font-semibold">Executive AI</h1>
 </header>
 <main class="max-w-4xl mx-auto p-6">
 """
