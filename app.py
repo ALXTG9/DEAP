@@ -424,6 +424,7 @@ def home() -> HTMLResponse:
     </body>
     </html>
     """
+    html += html_page_end()
     return HTMLResponse(html)
 
 @app.get("/webhook", response_class=HTMLResponse)
