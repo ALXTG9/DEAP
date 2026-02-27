@@ -417,8 +417,8 @@ def home() -> HTMLResponse:
         /* BIGGER bento tile */
         .bento-button {
             display: flex;
-            width: 250;
-            height: 250;
+            width: 250px;
+            height: 250px;
             justify-content: center;
             align-items: center;
             background-color: rgb(29, 93, 169);
