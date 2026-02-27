@@ -387,43 +387,57 @@ def build_draft_card_html(did: str, content_json: str, status: str, root_path: s
 
 @app.get("/", response_class=HTMLResponse)
 def home() -> HTMLResponse:
-    html = """
-    <html>
-    <head>
-        <title>DEAPInsights.ai</title>
-        <style>
-            .bento-button {
-                display: inline-block;
-                padding: 20px 32px;
-                background-color: rgb(29, 93, 169);
-                color: white;
-                font-size: 20px;
-                font-weight: 600;
-                text-decoration: none;
-                border-radius: 12px;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-                transition: transform 0.15s ease, box-shadow 0.15s ease;
-            }
-            .bento-button:hover {
-                transform: translateY(-3px);
-                box-shadow: 0 6px 14px rgba(0,0,0,0.25);
-            }
-            body {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
-                margin: 0;
-                background: #f5f7fa;
-                font-family: Arial, sans-serif;
-            }
-        </style>
-    </head>
-    <body>
+    # Use the same layout wrapper your webhook page uses
+    html = html_page_start("/")
+
+    html += """
+    <h2>DEAPInsights Bento</h2>
+
+    <div class="bento-container">
         <a class="bento-button" href="/drafts">Emails</a>
-    </body>
-    </html>
+    </div>
+
+    <style>
+        /* Align to top-left like the webhook page */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .bento-container {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        /* Bigger bento box */
+        .bento-button {
+            display: inline-block;
+            width: 260px;
+            height: 180px;
+            padding: 24px;
+            background-color: rgb(29, 93, 169);
+            color: white;
+            font-size: 26px;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 18px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .bento-button:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.28);
+        }
+    </style>
     """
+
     html += html_page_end()
     return HTMLResponse(html)
 
