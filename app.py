@@ -181,6 +181,33 @@ def set_draft_error(draft_id: str, error: str) -> None:
 # Helpers
 # ==============================================================================
 
+# -------------------------------
+# Header sanitation helpers
+# -------------------------------
+def _sanitize_header_value(value: str) -> str:
+    """
+    Unfold (remove CR/LF) and trim a header field value.
+    RFC allows "folding" with CRLF + WSP, but Python's EmailMessage
+    API forbids any CR/LF in assigned header values.
+    """
+    if value is None:
+        return None
+    # Replace CR and LF with a single space, then collapse whitespace
+    unfolded = " ".join(str(value).splitlines())
+    # Optionally, collapse multiple spaces
+    unfolded = re.sub(r"\s{2,}", " ", unfolded)
+    return unfolded.strip()
+
+def _sanitize_addr(addr: str) -> str:
+    """
+    Return only the email address part, unfolded and stripped.
+    """
+    if not addr:
+        return ""
+    _, parsed = parseaddr(addr)
+    parsed = _sanitize_header_value(parsed)
+    return parsed
+
 def extract_sender_address(payload: dict) -> str:
     """
     Prefer 'reply_to' if present, else fallback to 'from'. Returns just the email.
@@ -335,11 +362,9 @@ def build_draft_card_html(did: str, content_json: str, status: str, root_path: s
   <h3 class="mt-4 text-sm font-semibold text-gray-700">Draft Reply</h3>
   <pre class="bg-gray-100 p-4 rounded text-sm whitespace-pre-wrap">{ai_reply}</pre>
 
-  <h3 class="mt-4 text-sm font-semibold text-gray-700">Raw Message</h3>
+  <h3 class="mt-4 text-sm font-semibold text-gray-700">Customer Email</h3>
   <pre class="bg-gray-100 p-4 rounded text-sm whitespace-pre-wrap">{raw_text}</pre>
 
-  <h3 class="mt-4 text-sm font-semibold text-gray-700">Original Payload</h3>
-  <pre class="bg-gray-100 p-4 rounded text-xs whitespace-pre-wrap">{payload_pretty}</pre>
 """)
 
     if status == "pending":
@@ -592,8 +617,29 @@ async def execute_draft(draft_id: str, background_tasks: BackgroundTasks):
 def send_and_mark_task(draft_id: str):
     print(f">>> WORKER START: Processing {draft_id}", flush=True)
     conn = get_db_connection()
+
+    # --- sanitation helpers copied here for safety ---
+    def _sanitize_header_value(value: str) -> str:
+        """Remove CR/LF and collapse whitespace so EmailMessage accepts it."""
+        if value is None:
+            return None
+        unfolded = " ".join(str(value).splitlines())
+        unfolded = re.sub(r"\s{2,}", " ", unfolded)
+        return unfolded.strip()
+
+    def _sanitize_addr(addr: str) -> str:
+        """Extract and sanitize bare email address."""
+        if not addr:
+            return ""
+        _, parsed = parseaddr(addr)
+        parsed = _sanitize_header_value(parsed)
+        return parsed
+
     try:
-        row = conn.execute("SELECT content FROM drafts WHERE id=?", (draft_id,)).fetchone()
+        row = conn.execute(
+            "SELECT content FROM drafts WHERE id=?", (draft_id,)
+        ).fetchone()
+
         if not row:
             print(">>> WORKER ERROR: Row not found", flush=True)
             return
@@ -601,34 +647,58 @@ def send_and_mark_task(draft_id: str):
         data = json.loads(row["content"])
         payload = data.get("payload", {})
 
-        to_addr = (data.get("sender_email") or extract_sender_address(payload) or "").strip()
-        if not to_addr:
-            raise RuntimeError("Cannot determine recipient email address (no Reply-To / From)")
+        # ---- Determine recipient safely ----
+        to_addr_raw = data.get("sender_email") or extract_sender_address(payload)
+        to_addr = _sanitize_addr(to_addr_raw)
 
-        subject = f"Re: {payload.get('subject', 'Inquiry')}".strip()
+        if not to_addr:
+            raise RuntimeError(
+                "Cannot determine recipient email address (no Reply-To / From)"
+            )
+
+        # ---- Subject sanitisation ----
+        raw_subject = payload.get("subject", "Inquiry")
+        clean_subject = _sanitize_header_value(raw_subject)
+        subject = f"Re: {clean_subject}".strip()
+
+        # ---- Body ----
         body = data.get("draft_reply", "")
 
+        # ---- Threading headers ----
+        in_reply_to = _sanitize_header_value(
+            payload.get("message_id") or payload.get("Message-ID")
+        )
+        refs = _sanitize_header_value(
+            payload.get("references") or payload.get("References")
+        )
+
+        # ---- Perform send ----
         send_email_smtp(
             to_addr=to_addr,
             subject=subject,
             body=body,
-            in_reply_to=payload.get("message_id") or payload.get("Message-ID"),
-            refs=payload.get("references") or payload.get("References"),
+            in_reply_to=in_reply_to,
+            refs=refs,
         )
 
-        conn.execute("UPDATE drafts SET status='executed' WHERE id=?", (draft_id,))
+        # ---- Mark successful ----
+        conn.execute(
+            "UPDATE drafts SET status='executed' WHERE id=?", (draft_id,)
+        )
         print(f">>> WORKER COMPLETE: {draft_id} sent successfully", flush=True)
 
     except Exception as e:
         print(f">>> WORKER FAILED: {str(e)}", flush=True)
         try:
-            conn.execute("UPDATE drafts SET status='failed' WHERE id=?", (draft_id,))
+            conn.execute(
+                "UPDATE drafts SET status='failed' WHERE id=?", (draft_id,)
+            )
         except:
             pass
         set_draft_error(draft_id, str(e))
+
     finally:
         conn.close()
-
 
 # ==============================================================================
 # IMAP POLLER THREAD (with diagnostics)
@@ -813,25 +883,25 @@ SMTP_FROM_NAME = os.getenv("SMTP_FROM_NAME", "DEAP")  # display name for outgoin
 
 def send_email_smtp(to_addr: str, subject: str, body: str,
                     in_reply_to=None, refs=None):
-    """
-    Sends email via SMTP (Gmail or other).
-    - Auth using SMTP_EMAIL / SMTP_APP_PASSWORD
-    - Uses STARTTLS by default on port 587 (or SSL if configured)
-    - Preserves threading with In-Reply-To / References
-    """
+    # --- Validate required env ---
     if not SMTP_EMAIL or not SMTP_APP_PASSWORD:
         raise RuntimeError("Missing SMTP_EMAIL or SMTP_APP_PASSWORD environment variables")
 
+    # --- Sanitize all header-ish inputs ---
+    to_addr = _sanitize_addr(to_addr)
     if not to_addr:
         raise ValueError("Recipient address is empty")
 
-    # Build message
+    subject = _sanitize_header_value(subject) or "Re:"
+    from_name = _sanitize_header_value(SMTP_FROM_NAME) or "DEAP"
+    in_reply_to = _sanitize_header_value(in_reply_to) if in_reply_to else None
+    refs = _sanitize_header_value(refs) if refs else None
+
+    # --- Build message safely ---
     msg = EmailMessage()
     msg["Subject"] = subject
-    msg["From"] = f"{SMTP_FROM_NAME} <{SMTP_EMAIL}>"
+    msg["From"] = f"{from_name} <{SMTP_EMAIL}>"
     msg["To"] = to_addr
-
-    # Threading headers for proper reply chains
     if in_reply_to:
         msg["In-Reply-To"] = in_reply_to
     if refs:
@@ -858,7 +928,6 @@ def send_email_smtp(to_addr: str, subject: str, body: str,
 
     print(">>> SMTP: sent OK", flush=True)
     return True
-
 
 # ==============================================================================
 # Debug: print loaded routes on startup (helps verify you’re running the right file)
