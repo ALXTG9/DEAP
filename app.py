@@ -387,58 +387,58 @@ def build_draft_card_html(did: str, content_json: str, status: str, root_path: s
 
 @app.get("/", response_class=HTMLResponse)
 def home() -> HTMLResponse:
-    # Use the same layout wrapper your webhook page uses
-    html = html_page_start("/")
+    # Start a clean, no-sidebar page
+    html = """
+    <html>
+    <head>
+        <title>DEAPInsights.ai</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 20px;
+                font-family: Arial, sans-serif;
+                background: #f5f7fa;
+            }
 
-    html += """
-    <h2>DEAPInsights Bento</h2>
+            /* Top-left container */
+            .container {
+                margin: 0;
+            }
 
-    <div class="bento-container">
-        <a class="bento-button" href="/drafts">Emails</a>
-    </div>
+            /* BIGGER bento box */
+            .bento-button {
+                display: inline-block;
+                width: 320px;
+                height: 220px;
+                padding: 20px;
+                background-color: rgb(29, 93, 169);
+                color: white;
+                font-size: 32px;       /* MUCH BIGGER TEXT */
+                font-weight: 700;
+                text-decoration: none;
+                border-radius: 18px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+                transition: transform 0.15s ease, box-shadow 0.15s ease;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                text-align: center;
+            }
 
-    <style>
-        /* Align to top-left like the webhook page */
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
-
-        .bento-container {
-            margin-top: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        /* Bigger bento box */
-        .bento-button {
-            display: inline-block;
-            width: 260px;
-            height: 180px;
-            padding: 24px;
-            background-color: rgb(29, 93, 169);
-            color: white;
-            font-size: 26px;
-            font-weight: 600;
-            text-decoration: none;
-            border-radius: 18px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.18);
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-
-        .bento-button:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 18px rgba(0,0,0,0.28);
-        }
-    </style>
+            .bento-button:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 8px 18px rgba(0,0,0,0.28);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <a class="bento-button" href="/drafts">Emails</a>
+        </div>
+    </body>
+    </html>
     """
 
-    html += html_page_end()
     return HTMLResponse(html)
 
 @app.get("/webhook", response_class=HTMLResponse)
