@@ -387,84 +387,55 @@ def build_draft_card_html(did: str, content_json: str, status: str, root_path: s
 
 @app.get("/", response_class=HTMLResponse)
 def home() -> HTMLResponse:
-    # Keep your site’s standard header/logo from the layout
-    html = html_page_start("/")
+    html = html_page_start("Home")
 
     html += """
     <style>
-        /* --- Remove sidebar just on this page --- */
-        /* Common class names are targeted; adjust selectors to match your layout */
-        .sidebar, .nav-sidebar, #sidebar, [data-role="sidebar"] {
-            display: none !important;
-            width: 0 !important;
+        /* Remove Tailwind's max-w-4xl + mx-auto centering on THIS page only */
+        main {
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 24px !important;
+            width: 100% !important;
         }
 
-        /* Reset any layout that expects a left gutter from the sidebar */
-        .main, .content, .page-content, #content, [role="main"] {
-            margin-left: 0 !important;
-            padding-left: 20px; /* breathing room */
+        /* Bigger heading */
+        h2.bento-heading {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 16px;
         }
 
-        /* If your layout uses CSS grid or flex with a fixed column for the sidebar */
-        .layout, .app-shell, .shell, .page {
-            grid-template-columns: 1fr !important; /* collapse to one column */
-        }
-
-        /* Ensure the page starts at the very top-left under the header */
-        body {
-            margin: 0;
-            background: #f5f7fa;
-            font-family: Arial, sans-serif;
-        }
-
-        /* Keep spacing below the header/logo if needed */
-        .content, .main, .page-content {
-            margin-top: 16px;
-        }
-
-        /* Bigger Bento button styling */
+        /* Bento layout */
         .bento-container {
-            margin-top: 12px;
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
+            margin-top: 10px;
         }
 
+        /* BIGGER bento tile */
         .bento-button {
-            display: inline-flex;
-            width: 250px;         /* Larger tile */
-            height: 250px;        /* Taller tile */
-            padding: 24px;
-            background-color: rgb(29, 93, 169);
-            color: white;
-            font-size: 34px;      /* Bigger text */
-            line-height: 1.15;
-            font-weight: 800;
-            letter-spacing: 0.2px;
-            text-decoration: none;
-            border-radius: 20px;
-            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            display: flex;
+            width: 250;
+            height: 250;
             justify-content: center;
             align-items: center;
-            text-align: center;
+            background-color: rgb(29, 93, 169);
+            color: white;
+            font-size: 24px;   /* bigger text */
+            font-weight: 700;
+            border-radius: 20px;
+            text-decoration: none;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+            transition: 0.2s ease;
         }
 
         .bento-button:hover {
             transform: translateY(-4px);
-            box-shadow: 0 10px 22px rgba(0,0,0,0.28);
-        }
-
-        /* Heading size */
-        .bento-heading {
-            margin: 0 0 10px 0;
-            font-size: 22px;
-            font-weight: 800;
-            color: #0f172a; /* slate-900 */
+            box-shadow: 0 12px 26px rgba(0,0,0,0.3);
         }
     </style>
-
-    <h2 class="bento-heading">DEAPInsights Bento</h2>
 
     <div class="bento-container">
         <a class="bento-button" href="/drafts">Emails</a>
@@ -473,7 +444,6 @@ def home() -> HTMLResponse:
 
     html += html_page_end()
     return HTMLResponse(html)
-
 
 @app.get("/webhook", response_class=HTMLResponse)
 def webhook_info() -> HTMLResponse:
