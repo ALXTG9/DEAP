@@ -392,20 +392,22 @@ def build_draft_card_html(did: str, content_json: str, status: str, root_path: s
         action = f"{_root}/execute/{did}" if _root else f"/execute/{did}"
 
         html.append(f"""
-<form action="{action}" method="post"
-      onsubmit="
-        const btn = this.querySelector('button[type=submit]');
-        if (btn) {
-            btn.style.display = 'none';
-        }
-      ">
-  <input type="hidden" name="_" value="1">
-  <button type="submit"
-          class="mt-4 bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700">
-    Send Email
-  </button>
-</form>
-""")
+        <form action="{action}" method="post"
+              onsubmit="var btn=this.querySelector('button[type=submit]');
+                        if(!btn) return true;
+                        btn.style.display='none';
+                        var msg=document.createElement('div');
+                        msg.textContent='Sending…';
+                        msg.className='text-gray-600 mt-2';
+                        this.appendChild(msg);
+                        return true;">
+          <input type="hidden" name="_" value="1">
+          <button type="submit"
+                  class="mt-4 bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700">
+            Send Email
+          </button>
+        </form>
+        """)
 
     html.append("</div>")
     return "".join(html)
