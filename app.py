@@ -392,14 +392,14 @@ def build_draft_card_html(did: str, content_json: str, status: str, root_path: s
         action = f"{_root}/execute/{did}" if _root else f"/execute/{did}"
 
         html.append(f"""
-  <form action="{action}" method="post" enctype="application/x-www-form-urlencoded"
-        onsubmit="const b=this.querySelector('button[type=submit]'); b.disabled=true; b.innerText='Sending…';">
-    <input type="hidden" name="_" value="1"/>
-    <button type="submit"
-            class="mt-4 bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700">
-      Send Email
-    </button>
-  </form>
+<form action="{action}" method="post"
+      onsubmit="const btn=this.querySelector('button[type=submit]'); btn && (btn.disabled=true, btn.textContent='Sending…');">
+  <input type="hidden" name="_" value="1">
+  <button type="submit"
+          class="mt-4 bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700">
+    Send Email
+  </button>
+</form>
 """)
 
     html.append("</div>")
@@ -449,8 +449,8 @@ def home() -> HTMLResponse:
             justify-content: center;
             align-items: center;
 
-            background-color: #475569;
-            border: 4px solid #64748b;
+            background-color: #345C82;
+            border: 4px solid #6FA1D6;
             color: white;                   /* white text */
 
             font-size: 24px;
@@ -515,7 +515,7 @@ def list_drafts(request: Request) -> HTMLResponse:
     html = html_page_start("Drafts")
 
     if ok_msg:
-        html += f"<div class='ok'>Done: {ok_msg}</div>"
+        html += f"<div class='ok'></div>"
 
     if not rows:
         html += "<div>No emails yet. Lucky you.</div>"
@@ -535,8 +535,6 @@ def list_drafts(request: Request) -> HTMLResponse:
             "Expires": "0",
         },
     )
-
-
 
 @app.get("/edit/{draft_id}", response_class=HTMLResponse)
 def edit_draft_form(draft_id: str):
