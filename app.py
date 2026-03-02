@@ -304,7 +304,9 @@ tailwind.config = {{
        alt="Company Logo">
   <h1 class="text-3xl font-semibold">Executive AI</h1>
 </header>
-<main class="max-w-4xl mx-auto p-6">
+
+<!-- LEFT INDENT ONLY ON EMAIL/DRAFTS PAGES -->
+<main class="max-w-4xl mx-auto p-6 {'' if title=='Home' else 'pl-12'}">
 """
 
 
@@ -364,7 +366,6 @@ def build_draft_card_html(did: str, content_json: str, status: str, root_path: s
 
   <h3 class="mt-4 text-sm font-semibold text-gray-700">Customer Email</h3>
   <pre class="bg-gray-100 p-4 rounded text-sm whitespace-pre-wrap">{raw_text}</pre>
-
 """)
 
     if status == "pending":
@@ -414,9 +415,11 @@ def build_draft_card_html(did: str, content_json: str, status: str, root_path: s
 def home() -> HTMLResponse:
     html = html_page_start("Home")
 
+    # NO INDENT ON HOMEPAGE BECAUSE OF title=='Home' ABOVE
+
     html += """
     <style>
-        /* Remove Tailwind's max-w-4xl + mx-auto centering on THIS page only */
+        /* Remove Tailwind's max-w-4xl + centering on THIS page only */
         main {
             max-width: none !important;
             margin: 0 !important;
@@ -439,7 +442,7 @@ def home() -> HTMLResponse:
             margin-top: 10px;
         }
 
-        /* LIGHT GREY button with blue border + blue text */
+        /* *** UPDATED: NAVY BLUE SLATE WITH WHITE TEXT *** */
         .bento-button {
             display: flex;
             width: 250px;
@@ -447,9 +450,9 @@ def home() -> HTMLResponse:
             justify-content: center;
             align-items: center;
 
-            background-color: #f0f0f0;                /* light grey */
-            border: 4px solid rgb(29, 93, 169);      /* blue outline */
-            color: rgb(29, 93, 169);                 /* blue text */
+            background-color: #1e2a3a;      /* navy slate */
+            border: 4px solid #1e2a3a;      /* same tone border */
+            color: white;                   /* white text */
 
             font-size: 24px;
             font-weight: 700;
@@ -512,7 +515,6 @@ def list_drafts(request: Request) -> HTMLResponse:
         return HTMLResponse(f"<h1>DB error</h1><pre>{e}</pre>", status_code=500)
 
     html = html_page_start("Drafts")
-    html += "<h1>Drafts</h1>"
 
     if ok_msg:
         html += f"<div class='ok'>Done: {ok_msg}</div>"
