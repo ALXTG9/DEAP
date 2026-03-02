@@ -328,6 +328,7 @@ def build_draft_card_html(did: str, content_json: str, status: str, root_path: s
     status_color = {
         "pending": "bg-amber-500",
         "approved": "bg-blue-600",
+        "sending": "bg-indigo-600",   # NEW state color
         "executed": "bg-emerald-600",
         "failed": "bg-red-600",
     }.get(status, "bg-gray-600")
@@ -408,10 +409,15 @@ def build_draft_card_html(did: str, content_json: str, status: str, root_path: s
           </button>
         </form>
         """)
+    elif status == "sending":
+        html.append("""
+        <div class="text-gray-600 mt-4 font-semibold">
+            Sending… please wait.
+        </div>
+        """)
 
     html.append("</div>")
     return "".join(html)
-
 
 # ==============================================================================
 # Routes
@@ -617,17 +623,19 @@ async def execute_draft(draft_id: str, background_tasks: BackgroundTasks):
             print(f">>> ERROR: Draft {draft_id} not found in DB", flush=True)
             return RedirectResponse("/drafts?ok=missing", status_code=303)
 
+        # Key fix: put the draft into 'sending' BEFORE redirect, so the button won't render again
+        update_draft_status(draft_id, "sending")
+
         background_tasks.add_task(send_and_mark_task, draft_id)
         print(f">>> SUCCESS: Task queued for {draft_id}. Redirecting...", flush=True)
 
-        # ⬇️ add a timestamp to bust any caches on the redirected GET
+        # cache-bust the redirected GET
         ts = int(time.time())
         return RedirectResponse(url=f"/drafts?ok=sending&t={ts}", status_code=303)
 
     except Exception as e:
         print(f">>> /execute handler FAILED for {draft_id}: {repr(e)}", flush=True)
         return RedirectResponse("/drafts?ok=error", status_code=303)
-
 
 def send_and_mark_task(draft_id: str):
     print(f">>> WORKER START: Processing {draft_id}", flush=True)
