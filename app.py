@@ -393,7 +393,12 @@ def build_draft_card_html(did: str, content_json: str, status: str, root_path: s
 
         html.append(f"""
 <form action="{action}" method="post"
-      onsubmit="const btn=this.querySelector('button[type=submit]'); btn && (btn.disabled=true, btn.textContent='Sending…');">
+      onsubmit="
+        const btn = this.querySelector('button[type=submit]');
+        if (btn) {
+            btn.style.display = 'none';
+        }
+      ">
   <input type="hidden" name="_" value="1">
   <button type="submit"
           class="mt-4 bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700">
