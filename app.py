@@ -520,10 +520,7 @@ def list_drafts(request: Request) -> HTMLResponse:
     qs = parse_qs(urlparse(str(request.url)).query)
     ok_msg = (qs.get("ok") or [""])[0]
 
-    try:
-        rows = fetch_all_drafts()
-    except sqlite3.OperationalError as e:
-        return HTMLResponse(f"<h1>DB error</h1><pre>{e}</pre>", status_code=500)
+    rows = fetch_all_drafts()
 
     html = html_page_start("Drafts")
 
@@ -537,9 +534,20 @@ def list_drafts(request: Request) -> HTMLResponse:
         for did, content, status in rows:
             html += build_draft_card_html(did, content, status, root_path)
 
+    # ⬇⬇⬇ ADD THIS HERE ⬇⬇⬇
+    html += """
+    <script>
+    setInterval(() => {
+        if (document.body.innerText.includes("Sending…")) {
+            window.location.reload();
+        }
+    }, 3000);
+    </script>
+    """
+    # ⬆⬆⬆ END INSERT ⬆⬆⬆
+
     html += html_page_end()
 
-    # 👇 prevent any caching of the drafts page
     return HTMLResponse(
         html,
         headers={
