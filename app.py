@@ -449,8 +449,8 @@ def home() -> HTMLResponse:
             justify-content: center;
             align-items: center;
 
-            background-color: #2c3e50;
-            border: 4px solid #2c3e50;
+            background-color: #475569;
+            border: 4px solid #64748b;
             color: white;                   /* white text */
 
             font-size: 24px;
@@ -502,7 +502,6 @@ async def webhook(request: Request) -> dict:
     draft_id = save_draft(payload)
     return {"ok": True, "draft_id": draft_id}
 
-
 @app.get("/drafts", response_class=HTMLResponse)
 def list_drafts(request: Request) -> HTMLResponse:
     qs = parse_qs(urlparse(str(request.url)).query)
@@ -516,7 +515,7 @@ def list_drafts(request: Request) -> HTMLResponse:
     html = html_page_start("Drafts")
 
     if ok_msg:
-        html += f"<div class='ok'></div>"
+        html += f"<div class='ok'>Done: {ok_msg}</div>"
 
     if not rows:
         html += "<div>No emails yet. Lucky you.</div>"
@@ -526,7 +525,17 @@ def list_drafts(request: Request) -> HTMLResponse:
             html += build_draft_card_html(did, content, status, root_path)
 
     html += html_page_end()
-    return HTMLResponse(html)
+
+    # 👇 prevent any caching of the drafts page
+    return HTMLResponse(
+        html,
+        headers={
+            "Cache-Control": "no-store, max-age=0, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
+
 
 
 @app.get("/edit/{draft_id}", response_class=HTMLResponse)
@@ -581,11 +590,11 @@ def edit_draft_submit(draft_id: str, draft_reply: str = Form(...)):
 
     return RedirectResponse("/drafts?ok=edited", status_code=303)
 
-
 @app.post("/approve/{draft_id}")
 def approve_draft(draft_id: str) -> RedirectResponse:
     update_draft_status(draft_id, "approved")
-    return RedirectResponse(url="/drafts?ok=approved", status_code=303)
+    ts = int(time.time())
+    return RedirectResponse(url=f"/drafts?ok=approved&t={ts}", status_code=303)
 
 
 # ==============================================================================
@@ -606,9 +615,9 @@ async def execute_draft(draft_id: str, background_tasks: BackgroundTasks):
         background_tasks.add_task(send_and_mark_task, draft_id)
         print(f">>> SUCCESS: Task queued for {draft_id}. Redirecting...", flush=True)
 
-        resp = RedirectResponse(url="/drafts?ok=sending", status_code=303)
-        resp.background = background_tasks
-        return resp
+        # ⬇️ add a timestamp to bust any caches on the redirected GET
+        ts = int(time.time())
+        return RedirectResponse(url=f"/drafts?ok=sending&t={ts}", status_code=303)
 
     except Exception as e:
         print(f">>> /execute handler FAILED for {draft_id}: {repr(e)}", flush=True)
