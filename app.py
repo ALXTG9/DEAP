@@ -101,7 +101,6 @@ def run_local_ai_pipeline(message_text: str) -> dict:
 
 app = FastAPI(title="DEAP DEMO")
 
-
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     print(f">>> {request.method} {request.url.path}", flush=True)
@@ -450,8 +449,8 @@ def home() -> HTMLResponse:
             justify-content: center;
             align-items: center;
 
-            background-color: #1e2a3a;      /* navy slate */
-            border: 4px solid #1e2a3a;      /* same tone border */
+            background-color: #2c3e50;
+            border: 4px solid #2c3e50;
             color: white;                   /* white text */
 
             font-size: 24px;
@@ -517,10 +516,10 @@ def list_drafts(request: Request) -> HTMLResponse:
     html = html_page_start("Drafts")
 
     if ok_msg:
-        html += f"<div class='ok'>Done: {ok_msg}</div>"
+        html += f"<div class='ok'></div>"
 
     if not rows:
-        html += "<div>No drafts yet. POST JSON to <code>/webhook</code> and refresh.</div>"
+        html += "<div>No emails yet. Lucky you.</div>"
     else:
         root_path = request.scope.get("root_path", "")
         for did, content, status in rows:
